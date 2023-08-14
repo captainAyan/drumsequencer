@@ -1,7 +1,6 @@
 /*
 TODO LIST :
-1. only take potentiometer input during FUNCTION_MODE (otherwise, when playing the track the potentiometer gives random input)
-2. potentiometer can switch the bar (barIndex) when in BAR_EDIT_MODE
+1. potentiometer (or use a rotary encoder) can switch the bar (barIndex) when in BAR_EDIT_MODE
 */
 
 #include <math.h>
@@ -25,18 +24,20 @@ unsigned short bpm = 80; // 50 < bpm < 254
 short currentBeatIndex = -1; // index of a beat in a measure (-1 < currentBeatIndex < 16)
 unsigned short delayBetweenBeats = (60000 / bpm) / 4; // time in-between every 1/4th beat
 long lastMillis = 0;
+short queuedPatternIndex = -1; // index of the pattern that is queued to play after the current measure (-1 means no pattern queued)
+short currentPatternIndex = 0; // the current pattern that is being played
 
 // Modes
-const short BAR_EDIT_MODE = 0; // editing a selected bar [DEFAULT]
-const short BAR_SELECTION_MODE = 1; // selecting a bar
-const short FUNCTION_MODE = 2; // other actions
-const short PLAY_MODE = 3; // for playing
-short currentMode = BAR_EDIT_MODE; // setting default mode
+const char BAR_EDIT_MODE = 0; // editing a selected bar [DEFAULT]
+const char BAR_SELECTION_MODE = 1; // selecting a bar
+const char FUNCTION_MODE = 2; // other actions
+const char PLAY_MODE = 3; // for playing
+char currentMode = BAR_EDIT_MODE; // setting default mode
 
 // Sub-Modes of Function Mode
-const short DEFAULT_FUNCTION_MODE = 0; // blank display
-const short METRONOME_FUNCTION_MODE = 4; // for metronome display and adjustment [a FUNCTION_MODE sub-mode]
-short currentFunctionMode = DEFAULT_FUNCTION_MODE; // setting default mode
+const char DEFAULT_FUNCTION_MODE = 0; // blank display
+const char METRONOME_FUNCTION_MODE = 1; // for metronome display and adjustment [a FUNCTION_MODE sub-mode]
+char currentFunctionMode = DEFAULT_FUNCTION_MODE; // setting default mode
 
 // Animations
 const boolean BAR_EDIT_MODE_ANIMATION[11][4] = {
@@ -177,6 +178,8 @@ void onButtonClickExit(int buttonIndex) {
     else currentMode = PLAY_MODE;
 
     resetCurrentBeatIndex(); // reset beat index
+    queuedPatternIndex = -1; // reset queued pattern 
+    currentPatternIndex = 0; // current pattern index set to the 0 (first pattern)
   }
   else { // BTN 0, BTN 1, BTN 2, BTN 3
     if (currentMode == BAR_EDIT_MODE) {
@@ -205,7 +208,14 @@ void onButtonClickExit(int buttonIndex) {
       else if (buttonIndex == 3) ;
     }
     else if (currentMode == PLAY_MODE) {
-      Serial.println(buttonIndex);
+      if (buttonIndex == 0) queuedPatternIndex = queuedPatternIndex == 0 ? -1 : 0;
+      else if (buttonIndex == 1) queuedPatternIndex = queuedPatternIndex == 1 ? -1 : 1;
+      else if (buttonIndex == 2) queuedPatternIndex = queuedPatternIndex == 2 ? -1 : 2;
+      else if (buttonIndex == 3) queuedPatternIndex = queuedPatternIndex == 3 ? -1 : 3;
+
+      // Fill-in button
+      // if (buttonIndex == 1) currentPatternIndex = 1;
+      // else if (buttonIndex == 3) currentPatternIndex = 3;
     }
   }
 }
@@ -219,14 +229,14 @@ void analogInputHandler() {
       delayBetweenBeats = (60000 / bpm) / 4;
     }
   }
-
-  // Serial.println(bpm);
-  // barIndex = potVal0 / 256;
+  /* else if (currentMode == BAR_EDIT_MODE) {
+    barIndex = potVal0 / 256;
+  } */
 }
 
 /**
- * This function will run on every frame. It will take care of the "business logic" for every
- * frame and sound play sounds.
+ * This function will run on every frame. It will take care of the "business logic" that is required (scheduled)
+ * to be executed after a delay, or without any user action (i.e. button press etc.).
  */
 void logicHandler() {
   if (currentMode == FUNCTION_MODE) {
@@ -235,6 +245,8 @@ void logicHandler() {
       if (currentMillis - lastMillis > delayBetweenBeats) {
         lastMillis = currentMillis;
         currentBeatIndex = currentBeatIndex == 15 ? 0 : currentBeatIndex + 1;
+
+        if (currentBeatIndex % 4 == 0) tone(11, 80, 20);
       }
     }
   }
@@ -244,14 +256,29 @@ void logicHandler() {
       lastMillis = currentMillis;
       currentBeatIndex = currentBeatIndex == 15 ? 0 : currentBeatIndex + 1;
 
-      if (sequence[0][0][currentBeatIndex]) {
+      if (sequence[currentPatternIndex][0][currentBeatIndex]) {
         startPlayback(sampleKick, sizeof(sampleKick));
+        // tone(11, 70, 20);
+        Serial.println("drum kick");
       }
-      if (sequence[0][1][currentBeatIndex]) {
+      if (sequence[currentPatternIndex][1][currentBeatIndex]) {
         startPlayback(sampleSnare, sizeof(sampleSnare));
+        // tone(11, 185, 20);
+        Serial.println("drum snare");
       }
-      if (sequence[0][2][currentBeatIndex]) {
+      if (sequence[currentPatternIndex][2][currentBeatIndex]) {
         startPlayback(sampleHiHat, sizeof(sampleHiHat));
+        // tone(11, 1800, 20);
+        Serial.println("drum hi_hat");
+      }
+      if (sequence[currentPatternIndex][3][currentBeatIndex]) {
+        Serial.println("drum clap");
+      }
+
+      // switch to queued pattern on last beat (reset queued pattern)
+      if (currentBeatIndex == 15 && queuedPatternIndex != -1) {
+        currentPatternIndex = queuedPatternIndex;
+        queuedPatternIndex = -1;
       }
     }
   }
@@ -290,6 +317,8 @@ void displayHandler() {
   else if (currentMode == BAR_SELECTION_MODE) analogWrite(ledPins[4], 50);
   else if (currentMode == FUNCTION_MODE) analogWrite(ledPins[4], 255);
   else analogWrite(ledPins[4], 0);
+  
+  if (currentMode == PLAY_MODE && queuedPatternIndex != -1) analogWrite(ledPins[4], 255);
 }
 
 /**
@@ -364,6 +393,9 @@ void resetCurrentBeatIndex() {
   currentBeatIndex = -1;
 }
 
+/**
+ * Animates using 0th -> 3rd LED
+ */
 void animate(boolean animationFrames[][4], int frameCount, int delayAmount) {
   Serial.println("ANIMATION STARTED");
 
@@ -377,6 +409,10 @@ void animate(boolean animationFrames[][4], int frameCount, int delayAmount) {
   Serial.println("ANIMATION ENDED");
 }
 
+/**
+ * Debouces button
+ * https://docs.arduino.cc/built-in-examples/digital/Debounce
+ */
 boolean util_debounceButton(boolean state, int buttonPin) {
   boolean stateNow = digitalRead(buttonPin);
   if (state != stateNow) {
@@ -386,8 +422,9 @@ boolean util_debounceButton(boolean state, int buttonPin) {
   return stateNow;
 }
 
+
 void util_sequenceLog() {
-  Serial.println("=====================");
+  Serial.println("=====================\n");
   for(size_t i = 0; i < 4; i++) {
     for(size_t j = 0; j < 4; j++) {
       Serial.print("|");
