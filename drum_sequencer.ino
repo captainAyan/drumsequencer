@@ -1,6 +1,4 @@
 
-#include <math.h>
-#include <PCM.h>
 #define DEBUG false
 
 short potPin0 = A0; // Potentiometer output connected to analog pin 0 (A0)
@@ -21,10 +19,10 @@ short barIndex = 0; // -1 < barIndex < 4
 short instrumentIndex = 0; // -1 < instrumentIndex < 8
 short patternIndex = 0; // -1 < patternIndex < 4
 
-// For selection mode LED blinking
-boolean selectionModeLedBlinkCurrentState = LOW;  // initial LED state is low
-unsigned long selectionModeLedBlinkPreviousState = 0;
-const long selectionModeLedBlinkInterval = 500;
+// For function mode LED blinking
+boolean functionModeLedBlinkCurrentState = LOW;  // initial LED state is low
+unsigned long functionModeLedBlinkPreviousState = 0;
+const long functionModeLedBlinkInterval = 500;
 
 // For playing
 unsigned short bpm = 80; // 50 < bpm < 254
@@ -110,11 +108,6 @@ const boolean INDEX_INDICATOR_ANIMATIONS[8][3][4] = {
   {{0, 1, 1, 1}, {0, 0, 0, 0}, {0, 1, 1, 1}},
   {{1, 0, 0, 0}, {0, 0, 0, 0}, {1, 0, 0, 0}},
 };
-
-// Sound Samples
-const unsigned char sampleKick[] PROGMEM = {};
-const unsigned char sampleSnare[] PROGMEM = {};
-const unsigned char sampleHiHat[] PROGMEM = {};
 
 void setup() {
   Serial.begin(9600);
@@ -204,7 +197,7 @@ void onButtonClickExit(int buttonIndex) {
       short i = barIndex * 4 + buttonIndex;
       sequence[patternIndex][instrumentIndex][i] = sequence[patternIndex][instrumentIndex][i] == LOW ? HIGH : LOW;
 
-      Serial.print("edit ");
+      Serial.print("e ");
       Serial.print(patternIndex);
       Serial.print(" ");
       Serial.print(instrumentIndex);
@@ -306,24 +299,30 @@ void logicHandler() {
       lastMillis = currentMillis;
       currentBeatIndex = currentBeatIndex == 15 ? 0 : currentBeatIndex + 1;
 
+      for (int commInstrumentIndex = 0; commInstrumentIndex < 8; commInstrumentIndex++) {
+        if (sequence[currentPatternIndex][commInstrumentIndex][currentBeatIndex]) {
+          Serial.print("p ");
+          Serial.println(commInstrumentIndex);
+        }
+      }
+
+      /*
       if (sequence[currentPatternIndex][0][currentBeatIndex]) {
-        startPlayback(sampleKick, sizeof(sampleKick));
         // tone(11, 70, 20);
         Serial.println("drum kick");
       }
       if (sequence[currentPatternIndex][1][currentBeatIndex]) {
-        startPlayback(sampleSnare, sizeof(sampleSnare));
         // tone(11, 185, 20);
         Serial.println("drum snare");
       }
       if (sequence[currentPatternIndex][2][currentBeatIndex]) {
-        startPlayback(sampleHiHat, sizeof(sampleHiHat));
         // tone(11, 1800, 20);
         Serial.println("drum hi_hat");
       }
       if (sequence[currentPatternIndex][3][currentBeatIndex]) {
         Serial.println("drum clap");
       }
+      */
 
       // switch to queued pattern on last beat (reset queued pattern)
       if (currentBeatIndex == 15 && queuedPatternIndex != -1) {
@@ -372,22 +371,21 @@ void displayHandler() {
   }
 
   // LED 4 (mode led)
-  if (currentMode == EDIT_MODE) analogWrite(ledPins[4], 0);
-  else if (currentMode == SELECTION_MODE) {
-    // analogWrite(ledPins[4], 50);
+  if (currentMode == EDIT_MODE) digitalWrite(ledPins[4], LOW);
+  else if (currentMode == SELECTION_MODE) digitalWrite(ledPins[4], HIGH);
+  else if (currentMode == FUNCTION_MODE) {
     unsigned long currentMillis = millis();
 
-    if (currentMillis - selectionModeLedBlinkPreviousState >= selectionModeLedBlinkInterval) {
-      selectionModeLedBlinkPreviousState = currentMillis;
+    if (currentMillis - functionModeLedBlinkPreviousState >= functionModeLedBlinkInterval) {
+      functionModeLedBlinkPreviousState = currentMillis;
 
-      if (selectionModeLedBlinkCurrentState == LOW) selectionModeLedBlinkCurrentState = HIGH;
-      else selectionModeLedBlinkCurrentState = LOW;
+      if (functionModeLedBlinkCurrentState == LOW) functionModeLedBlinkCurrentState = HIGH;
+      else functionModeLedBlinkCurrentState = LOW;
 
-      digitalWrite(ledPins[4], selectionModeLedBlinkCurrentState);
+      digitalWrite(ledPins[4], functionModeLedBlinkCurrentState);
     }
   }
-  else if (currentMode == FUNCTION_MODE) analogWrite(ledPins[4], 255);
-  else analogWrite(ledPins[4], 0);
+  else digitalWrite(ledPins[4], LOW);
 
   if (currentMode == PLAY_MODE && queuedPatternIndex != -1) analogWrite(ledPins[4], 255);
 }
