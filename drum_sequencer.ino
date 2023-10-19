@@ -5,6 +5,11 @@
 
 short potPin0 = A0; // Potentiometer output connected to analog pin 0 (A0)
 short potPin1 = A4; // Potentiometer output connected to analog pin 4 (A4)
+
+short pedalPin = A2; // Foot pedal connected to analog pin 2 (A2)
+boolean pedalState = LOW; // whether the pedal is pressed or not
+const short analogButtonThreshold = 165;
+
 short ledPins[] = {8, 9, 13, 12, 10}; // led 0, led 1, led 2, led 3, mode led
 short buttonPins[] = {2, 3, 4, 5, 6, 7}; // BTN 0, BTN 1, BTN 2, BTN 3, FN BTN 0, FN BTN 1
 boolean buttonStates[] = {LOW, LOW, LOW, LOW, LOW, LOW}; // whether a button is pressed or not
@@ -132,9 +137,9 @@ void setup() {
     }
   }
 
-  animate(WELCOME_ANIMATION, 49, 50); // welcome animation
-
   pinMode(11, OUTPUT); // speaker pin
+
+  animate(WELCOME_ANIMATION, 49, 50); // welcome animation
 }
 
 void loop() {
@@ -244,17 +249,38 @@ void onButtonClickExit(int buttonIndex) {
 }
 
 void analogInputHandler() {
-  int potVal0 = analogRead(potPin0);
-  int potVal1 = analogRead(potPin1);
-
   if (currentMode == FUNCTION_MODE) {
     if (currentFunctionMode == METRONOME_FUNCTION_MODE) {
+      int potVal0 = analogRead(potPin0);
       bpm = (potVal0 / 5) + 50;
       delayBetweenBeats = (60000 / bpm) / 4;
     }
   }
   else if (currentMode == EDIT_MODE) {
+    int potVal1 = analogRead(potPin1);
     barIndex = potVal1 / 256;
+  }
+  else if (currentMode == PLAY_MODE) {
+    /// new implementation
+    int currentVal = analogRead(pedalPin);
+    // Serial.println(currentVal);
+    if (currentVal > analogButtonThreshold && pedalState == LOW) { // button click entered
+      delay(50);
+      int newCurrentVal = analogRead(pedalPin);
+      if (currentVal > analogButtonThreshold) {
+        pedalState = HIGH;
+      }
+      delay(150);
+    }
+    else if (currentVal < analogButtonThreshold && pedalState == HIGH) {
+      delay(50);
+      int newCurrentVal = analogRead(pedalPin);
+      if (currentVal < analogButtonThreshold) {
+        pedalState = LOW;
+      }
+      Serial.println("pedal");
+      delay(150);
+    }
   }
 }
 
