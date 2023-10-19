@@ -16,6 +16,11 @@ short barIndex = 0; // -1 < barIndex < 4
 short instrumentIndex = 0; // -1 < instrumentIndex < 8
 short patternIndex = 0; // -1 < patternIndex < 4
 
+// For edit mode LED blinking
+boolean editModeLedBlinkCurrentState = LOW;  // initial LED state is low
+unsigned long editModeLedBlinkPreviousState = 0;
+const long editModeLedBlinkInterval = 500; 
+
 // For playing
 unsigned short bpm = 80; // 50 < bpm < 254
 short currentBeatIndex = -1; // index of a beat in a measure (-1 < currentBeatIndex < 16)
@@ -172,7 +177,7 @@ void onButtonClickExit(int buttonIndex) {
     else if (currentMode == SELECTION_MODE) {
       animate(BAR_ACTION_MODE_ANIMATION, 6, MODE_TRANSITION_ANIMATION_FRAME_DELAY);
       currentMode = FUNCTION_MODE;
-
+ 
       // setting default sub-mode for FUNCTION_MODE
       currentFunctionMode = DEFAULT_FUNCTION_MODE;
     }
@@ -333,7 +338,19 @@ void displayHandler() {
 
   // LED 4 (mode led)
   if (currentMode == EDIT_MODE) analogWrite(ledPins[4], 0);
-  else if (currentMode == SELECTION_MODE) analogWrite(ledPins[4], 50);
+  else if (currentMode == SELECTION_MODE) {
+    // analogWrite(ledPins[4], 50);
+    unsigned long currentMillis = millis();
+
+    if (currentMillis - editModeLedBlinkPreviousState >= editModeLedBlinkInterval) {
+      editModeLedBlinkPreviousState = currentMillis;
+
+      if (editModeLedBlinkCurrentState == LOW) editModeLedBlinkCurrentState = HIGH;
+      else editModeLedBlinkCurrentState = LOW;
+
+      digitalWrite(ledPins[4], editModeLedBlinkCurrentState);
+    }
+  }
   else if (currentMode == FUNCTION_MODE) analogWrite(ledPins[4], 255);
   else analogWrite(ledPins[4], 0);
 
