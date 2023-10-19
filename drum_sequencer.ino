@@ -21,10 +21,10 @@ short barIndex = 0; // -1 < barIndex < 4
 short instrumentIndex = 0; // -1 < instrumentIndex < 8
 short patternIndex = 0; // -1 < patternIndex < 4
 
-// For edit mode LED blinking
-boolean editModeLedBlinkCurrentState = LOW;  // initial LED state is low
-unsigned long editModeLedBlinkPreviousState = 0;
-const long editModeLedBlinkInterval = 500; 
+// For selection mode LED blinking
+boolean selectionModeLedBlinkCurrentState = LOW;  // initial LED state is low
+unsigned long selectionModeLedBlinkPreviousState = 0;
+const long selectionModeLedBlinkInterval = 500;
 
 // For playing
 unsigned short bpm = 80; // 50 < bpm < 254
@@ -368,13 +368,13 @@ void displayHandler() {
     // analogWrite(ledPins[4], 50);
     unsigned long currentMillis = millis();
 
-    if (currentMillis - editModeLedBlinkPreviousState >= editModeLedBlinkInterval) {
-      editModeLedBlinkPreviousState = currentMillis;
+    if (currentMillis - selectionModeLedBlinkPreviousState >= selectionModeLedBlinkInterval) {
+      selectionModeLedBlinkPreviousState = currentMillis;
 
-      if (editModeLedBlinkCurrentState == LOW) editModeLedBlinkCurrentState = HIGH;
-      else editModeLedBlinkCurrentState = LOW;
+      if (selectionModeLedBlinkCurrentState == LOW) selectionModeLedBlinkCurrentState = HIGH;
+      else selectionModeLedBlinkCurrentState = LOW;
 
-      digitalWrite(ledPins[4], editModeLedBlinkCurrentState);
+      digitalWrite(ledPins[4], selectionModeLedBlinkCurrentState);
     }
   }
   else if (currentMode == FUNCTION_MODE) analogWrite(ledPins[4], 255);
