@@ -237,13 +237,13 @@ void onButtonClickExit(int buttonIndex) {
     }
     else if (currentMode == PLAY_MODE) {
       if (buttonIndex == 0) queuedPatternIndex = queuedPatternIndex == 0 ? -1 : 0;
-      else if (buttonIndex == 1) queuedPatternIndex = queuedPatternIndex == 1 ? -1 : 1;
+      // else if (buttonIndex == 1) queuedPatternIndex = queuedPatternIndex == 1 ? -1 : 1;
       else if (buttonIndex == 2) queuedPatternIndex = queuedPatternIndex == 2 ? -1 : 2;
-      else if (buttonIndex == 3) queuedPatternIndex = queuedPatternIndex == 3 ? -1 : 3;
+      // else if (buttonIndex == 3) queuedPatternIndex = queuedPatternIndex == 3 ? -1 : 3;
 
       // Fill-in button
-      // if (buttonIndex == 1) currentPatternIndex = 1;
-      // else if (buttonIndex == 3) currentPatternIndex = 3;
+      if (buttonIndex == 1) currentPatternIndex = 1;
+      else if (buttonIndex == 3) currentPatternIndex = 3;
     }
   }
 }
