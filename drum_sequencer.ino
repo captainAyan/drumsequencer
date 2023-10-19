@@ -359,7 +359,16 @@ void displayHandler() {
   }
   else if (currentMode == PLAY_MODE) {
     for(size_t i = 0; i < 4; i++) digitalWrite(ledPins[i], LOW);
-    digitalWrite(ledPins[((currentBeatIndex / 4))], HIGH);
+    // digitalWrite(ledPins[((currentBeatIndex / 4))], HIGH); // the old way
+
+    // binary beat display with big brain logic
+    short displayBeat = currentBeatIndex/4;
+    if (displayBeat == 1 || displayBeat == 3) digitalWrite(ledPins[3], HIGH);
+    if (displayBeat == 2 || displayBeat == 3) digitalWrite(ledPins[2], HIGH);
+
+    // binary pattern display with the same bigger brain logic
+    if (currentPatternIndex == 1 || currentPatternIndex == 3) digitalWrite(ledPins[1], HIGH);
+    if (currentPatternIndex == 2 || currentPatternIndex == 3) digitalWrite(ledPins[0], HIGH);
   }
 
   // LED 4 (mode led)
