@@ -396,7 +396,7 @@ void displayHandler() {
 void changeInstrumentIndex() {
   instrumentIndex = instrumentIndex == 7 ? 0 : instrumentIndex + 1;
 
-  animate(INDEX_INDICATOR_ANIMATIONS[instrumentIndex], 3, 50);
+  animate(INDEX_INDICATOR_ANIMATIONS[instrumentIndex], 3, 200);
 }
 
 /**
@@ -408,7 +408,7 @@ void changePatternIndex() {
   patternIndex = patternIndex == 3 ? 0 : patternIndex + 1;
   instrumentIndex = 0;
 
-  animate(INDEX_INDICATOR_ANIMATIONS[patternIndex], 3, 50);
+  animate(INDEX_INDICATOR_ANIMATIONS[patternIndex], 3, 200);
 }
 
 /**
@@ -417,11 +417,11 @@ void changePatternIndex() {
  */
 void displayIndices() {
   // Pattern
-  animate(INDEX_INDICATOR_ANIMATIONS[patternIndex], 3, 50);
+  animate(INDEX_INDICATOR_ANIMATIONS[patternIndex], 3, 200);
   delay(500);
 
   // Instrument
-  animate(INDEX_INDICATOR_ANIMATIONS[instrumentIndex], 3, 50);
+  animate(INDEX_INDICATOR_ANIMATIONS[instrumentIndex], 3, 200);
   delay(500);
 }
 
