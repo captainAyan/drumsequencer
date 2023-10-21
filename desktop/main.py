@@ -7,14 +7,15 @@ pygame.init()
 
 win = pygame.display.set_mode((276, 480))
 pygame.display.set_caption("Drum Machine")
+comm_port = "COM11"
 
 arduino = None
 try:
-    arduino = serial.Serial(port='COM11', baudrate=9600, timeout=.1)
+    arduino = serial.Serial(port=comm_port, baudrate=9600, timeout=.1)
 except serial.SerialException:
     print("cannot connect to arduino")
 
-
+pygame.mixer.init()
 metronome = pygame.mixer.Sound("./audio/metronome.mp3")
 
 sounds = [
@@ -46,7 +47,14 @@ disconnectionError = False
 
 while run:
 
-    pygame.time.delay(int(1000 / 60))
+    # resetting matrices when there is an error
+    if disconnectionError:
+        pattern_0_beat_metrix = [[False for i in range(16)] for j in range(8)]
+        pattern_1_beat_metrix = [[False for i in range(16)] for j in range(8)]
+        pattern_2_beat_metrix = [[False for i in range(16)] for j in range(8)]
+        pattern_3_beat_metrix = [[False for i in range(16)] for j in range(8)]
+
+    pygame.time.delay(int(1000 / 100))
 
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
@@ -84,16 +92,15 @@ while run:
             # try re-establishing connection
             try:
                 disconnectionError = True
-                arduino = serial.Serial(port='COM11', baudrate=9600, timeout=.1)
+                arduino = serial.Serial(port=comm_port, baudrate=9600, timeout=.1)
             except serial.SerialException: pass
 
     except serial.SerialException:
         # try re-establishing connection
         try:
             disconnectionError = True
-            arduino = serial.Serial(port='COM11', baudrate=9600, timeout=.1)
+            arduino = serial.Serial(port=comm_port, baudrate=9600, timeout=.1)
         except serial.SerialException: pass
-
 
     # reset screen
     win.fill((0, 0, 0))
