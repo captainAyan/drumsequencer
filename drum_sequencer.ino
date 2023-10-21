@@ -290,6 +290,8 @@ void logicHandler() {
         currentBeatIndex = currentBeatIndex == 15 ? 0 : currentBeatIndex + 1;
 
         if (currentBeatIndex % 4 == 0) tone(11, 80, 20);
+
+        Serial.print("m");
       }
     }
   }

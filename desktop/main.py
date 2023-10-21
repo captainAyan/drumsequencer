@@ -19,9 +19,14 @@ pygame.mixer.init()
 metronome = pygame.mixer.Sound("./audio/metronome.mp3")
 
 sounds = [
-    pygame.mixer.Sound("./audio/kick.mp3"),
-    pygame.mixer.Sound("./audio/snare.mp3"),
-    pygame.mixer.Sound("./audio/hi-hat.mp3")
+    pygame.mixer.Sound("./audio/1.wav"), # kick
+    pygame.mixer.Sound("./audio/2.wav"), # snare
+    pygame.mixer.Sound("./audio/3.wav"), # hi hat closed
+    pygame.mixer.Sound("./audio/4.wav"), # hi hat open
+    pygame.mixer.Sound("./audio/5.wav"), # crash
+    pygame.mixer.Sound("./audio/6.wav"), # ride
+    pygame.mixer.Sound("./audio/7.wav"), # hi tom
+    pygame.mixer.Sound("./audio/8.wav"), # mid tom
 ]
 
 logo = pygame.image.load("./logo.png").convert()
@@ -54,7 +59,7 @@ while run:
         pattern_2_beat_metrix = [[False for i in range(16)] for j in range(8)]
         pattern_3_beat_metrix = [[False for i in range(16)] for j in range(8)]
 
-    pygame.time.delay(int(1000 / 100))
+    pygame.time.delay(int(1000 / 200))
 
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
@@ -83,6 +88,9 @@ while run:
                 if patternIndex == 1: pattern_1_beat_metrix[instrumentIndex][beatIndex] = val
                 if patternIndex == 2: pattern_2_beat_metrix[instrumentIndex][beatIndex] = val
                 if patternIndex == 3: pattern_3_beat_metrix[instrumentIndex][beatIndex] = val
+
+            if line.split(" ")[0] == 'm':
+                metronome.play()
 
             if line.split(" ")[0] == 'p': # Play mode
                 instrument_index = int(line.split(" ")[1])
